@@ -1,0 +1,50 @@
+name: Build Windows Portable Package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile, verify and package using MSVC
+        shell: cmd
+        run: |
+          @echo off
+          for /f "usebackq tokens=*" %%I in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set VSROOT=%%I
+          if not defined VSROOT exit /b 1
+          call "%VSROOT%\Common7\Tools\VsDevCmd.bat" -arch=x64
+          python -m pip install --upgrade pip setuptools wheel || exit /b 1
+          python -m pip install -r requirements-build.txt || exit /b 1
+          python build_engine.py build_ext --inplace || exit /b 1
+          python -c "import numpy as np; from app.engine import openmp_kernels as k; x=np.arange(1,100001,dtype=np.float64); assert k.numeric_stats_seq(x)[:5] == k.numeric_stats_parallel(x,4,'static')[:5]; print(k.engine_info())" || exit /b 1
+          python -m PyInstaller --noconfirm --clean --onedir --name ParallelBigDataAnalytics --add-data "frontend;frontend" --collect-all fastapi --collect-all uvicorn --collect-all numpy --collect-all psutil --collect-all pyarrow --hidden-import app.main --hidden-import app.engine.openmp_kernels --hidden-import pynvml --collect-submodules app.services scripts\portable_entry.py || exit /b 1
+          if not exist "dist\ParallelBigDataAnalytics\workspace" mkdir "dist\ParallelBigDataAnalytics\workspace"
+          copy /y "scripts\RUN_PORTABLE.bat" "dist\ParallelBigDataAnalytics\RUN.bat" || exit /b 1
+          copy /y "scripts\STOP_PORTABLE.bat" "dist\ParallelBigDataAnalytics\STOP.bat" || exit /b 1
+          copy /y "README.md" "dist\ParallelBigDataAnalytics\README.txt" || exit /b 1
+          powershell -NoProfile -Command "Compress-Archive -Path 'dist\ParallelBigDataAnalytics\*' -DestinationPath 'dist\Parallel_Big_Data_Analytics_Windows_x64.zip' -Force" || exit /b 1
+      - name: Upload portable ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Parallel-Big-Data-Analytics-Windows-x64
+          path: dist/Parallel_Big_Data_Analytics_Windows_x64.zip
+          if-no-files-found: error
+      - name: Publish GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Parallel_Big_Data_Analytics_Windows_x64.zip
+          generate_release_notes: true
