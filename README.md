@@ -189,6 +189,8 @@ The frontend (`frontend/index.html`, `static/styles.css`, `static/fx.js`) was re
 dark "chalkboard" / light "graph paper" themes (toggle in the top bar), glass panels, a guided 1→4 journey
 (Data Lab → Benchmark Setup → Live Monitor → Results) and a live chip-network background — microchips drift, join each
 
+https://shayan-analyst.github.io/Parallel-Big-Data-Analytic-System/
+
 
 Parallel Big Data Analytics: Portable Windows build
 
