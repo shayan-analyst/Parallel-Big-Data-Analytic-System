@@ -188,6 +188,13 @@ MIT. See `LICENSE`.
 The frontend (`frontend/index.html`, `static/styles.css`, `static/fx.js`) was redesigned to match the AlgoVision project:
 dark "chalkboard" / light "graph paper" themes (toggle in the top bar), glass panels, a guided 1→4 journey
 (Data Lab → Benchmark Setup → Live Monitor → Results) and a live chip-network background — microchips drift, join each
+
+
+Parallel Big Data Analytics: Portable Windows build
+
+Download Parallel_Big_Data_Analytics_Windows_x64.zip and extract it.
+Double-click RUN.bat. Your browser will open the app with the local engine connected.
+Run STOP.bat to close it.
 other with chain links, break apart and re-link to their nearest neighbours; move the mouse to pull nearby chips into a hub.
 Backend, API and benchmark logic are unchanged.
 
